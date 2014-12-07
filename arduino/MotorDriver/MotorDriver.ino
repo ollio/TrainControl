@@ -9,7 +9,7 @@
 #define RIGHT_MOTOR_DIR_PIN 8
 #define RIGHT_MOTOR_PWM_PIN 10
 
-String name = "Horizon Express";
+String name = "Gelbe Lok";
 
 String buf = "";
 
@@ -27,7 +27,7 @@ void setup() {
   digitalWrite(LED, HIGH);
   
   // testen
-  Serial.print("AT+NAMEHORIZON_EXPRESS");
+  Serial.print("AT+NAMEGELBE_LOK");
   
 //  Timer1.initialize(10*1000000);
 //  Timer1.attachInterrupt(checkBatt);
@@ -123,7 +123,7 @@ void handleMessage() {
     case 'B':
       {
         int bat = analogRead(7);
-        Serial.print("S:");
+        Serial.print(":");
         Serial.println(bat);
       }
       break;
