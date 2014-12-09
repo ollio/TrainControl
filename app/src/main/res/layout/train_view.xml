@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="fill_parent"
+  android:layout_height="200dp"
+  android:layout_margin="5dp"
+  android:background="@drawable/background_view_rounded_single"
+  android:padding="10dp"
+  android:visibility="visible">
+
+  <ImageView
+    android:id="@+id/trainConnected"
+    android:layout_width="20dp"
+    android:layout_height="20dp"
+    android:src="@drawable/led_red" />
+
+  <ImageView
+    android:id="@+id/trainImageView"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:layout_centerHorizontal="true"
+    android:layout_centerVertical="true"
+    android:src="@drawable/keine_lok" />
+
+</LinearLayout>
