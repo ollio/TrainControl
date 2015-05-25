@@ -23,10 +23,11 @@ void setup() {
   pinMode( RIGHT_MOTOR_PWM_PIN, OUTPUT );
 
   Serial.begin(9600);
-
-  digitalWrite(LED, HIGH);
   
+<<<<<<< HEAD
   // testen
+=======
+>>>>>>> 22f7d7d755dd1599a6d86f52c31a6cff1e62e2d7
   Serial.print("AT+NAMEGELBE_LOK");
   
 //  Timer1.initialize(10*1000000);
@@ -42,21 +43,13 @@ void checkBatt() {
 // the loop routine runs over and over again forever:
 void loop() {
   checkSerial();
-  
-  /*}
   digitalWrite(LED, HIGH);   // turn the LED on (HIGH is the voltage level)
-  digitalWrite(LEFT_MOTOR_DIR_PIN, HIGH );    
-  for(int i=0; i<250; i+=10) {
-    analogWrite( LEFT_MOTOR_PWM_PIN, i );
-    delay(200);
-  }
-  for(int i=200; i>0; i-=10) {
-    analogWrite( LEFT_MOTOR_PWM_PIN, i );
-    delay(200);
-  }
+  delay(50);               // wait 
+
+  checkSerial();
   digitalWrite(LED, LOW);    // turn the LED off by making the voltage LOW
-  delay(2000);               // wait for a second
-  */
+  delay(50);               // wait 
+  
 }
 
 void checkSerial() {
@@ -82,12 +75,13 @@ void handleMessage() {
 #endif
 
   switch(buf.charAt(0)) {
-    case 'N': 
+    case 'N': // Name
       Serial.print("N:");
       Serial.println(name);
       break;
-      
-    case 'L':
+
+/*      
+    case 'L': // LED 
       if(buf.charAt(1) == '0') {
         digitalWrite(LED, LOW);
       } else {
@@ -96,8 +90,9 @@ void handleMessage() {
       Serial.print("L:");
       Serial.println(buf.charAt(1));
       break;
+*/
 
-    case 'D':
+    case 'D': // DIRECTION
       if(buf.charAt(1) == '0') {
         digitalWrite(LEFT_MOTOR_DIR_PIN, LOW ); 
       } else {
@@ -107,7 +102,7 @@ void handleMessage() {
       Serial.println(buf.charAt(1));
       break;
         
-    case 'S':    
+    case 'S': // SET SPEED
       {
         char spdar[3];
         spdar[0] = buf.charAt(1); 
@@ -120,11 +115,22 @@ void handleMessage() {
       } 
       break;
       
-    case 'B':
+    case 'B': // GET BATT
       {
         int bat = analogRead(7);
         Serial.print(":");
         Serial.println(bat);
+      }
+      break;
+      
+    case 'V': // GET VERSION
+      Serial.print("AT+VERSION");
+      break;
+      
+    case 'O': // AT Response OK
+      if(buf.charAt(1) == 'K') {
+        Serial.print("V:");
+        Serial.println(buf);
       }
       break;
     
