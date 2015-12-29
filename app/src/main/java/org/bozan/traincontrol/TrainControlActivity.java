@@ -16,6 +16,7 @@ import org.bozan.traincontrol.bt.NoDevice;
 import org.bozan.traincontrol.bt.TrainControlDevice;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -26,7 +27,7 @@ public class TrainControlActivity extends Activity implements ActivityCallback {
   private static final int ITEM_GROUP = 13158;
 
   private BlueToothController blueToothController;
-  private List<TrainControlDevice> controlDevices;
+  private final List<TrainControlDevice> controlDevices = new ArrayList<>();
 
 
   @Override
@@ -64,7 +65,8 @@ public class TrainControlActivity extends Activity implements ActivityCallback {
 
   @Override
   public void onTrainControlDevicesUpdated(List<TrainControlDevice> controlDevices) {
-    TrainControlActivity.this.controlDevices = controlDevices;
+    TrainControlActivity.this.controlDevices.clear();
+    TrainControlActivity.this.controlDevices.addAll(controlDevices);
   }
 
   @Override
