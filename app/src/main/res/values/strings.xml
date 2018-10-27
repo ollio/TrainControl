@@ -5,6 +5,8 @@
   <string name="set_speed">Geschwindigkeit</string>
   <string name="radio_forward">Vorwärts</string>
   <string name="radio_reverse">Rückwärts</string>
+  <string name="radio_lights_on">Licht an</string>
+  <string name="radio_lights_off">Licht aus</string>
     <string name="action_rescan">Rescan</string>
 
     <string-array name="trains_array">

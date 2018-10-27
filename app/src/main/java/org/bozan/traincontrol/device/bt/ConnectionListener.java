@@ -1,4 +1,4 @@
-package org.bozan.traincontrol.bt;
+package org.bozan.traincontrol.device.bt;
 
 /**
  * Created by bozan on 08.12.2014.

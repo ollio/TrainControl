@@ -11,9 +11,12 @@ import android.widget.SeekBar;
 import android.widget.Toast;
 
 import org.apache.commons.lang3.StringUtils;
-import org.bozan.traincontrol.bt.BlueToothController;
-import org.bozan.traincontrol.bt.NoDevice;
-import org.bozan.traincontrol.bt.TrainControlDevice;
+import org.bozan.traincontrol.device.DeviceController;
+import org.bozan.traincontrol.device.TrainControlDevice;
+import org.bozan.traincontrol.device.bt.BlueToothController;
+import org.bozan.traincontrol.device.NoDevice;
+import org.bozan.traincontrol.device.bt.TrainControlBluetoothDevice;
+import org.bozan.traincontrol.device.mqtt.MqttController;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,7 +29,7 @@ public class TrainControlActivity extends Activity implements ActivityCallback {
 
   private static final int ITEM_GROUP = 13158;
 
-  private BlueToothController blueToothController;
+  private DeviceController deviceController;
   private final List<TrainControlDevice> controlDevices = new ArrayList<>();
 
 
@@ -38,17 +41,24 @@ public class TrainControlActivity extends Activity implements ActivityCallback {
     showDeviceImage(new NoDevice());
     initTrainDirection();
     initTrainSpeed();
-    initBlueTooth();
+    initLights();
+//    initBlueTooth();
+    initMqtt();
+  }
+
+  private void initMqtt() {
+    deviceController = new MqttController(this);
+    deviceController.init();
   }
 
   private void initBlueTooth() {
-    blueToothController = new BlueToothController(this);
-    blueToothController.init();
+    deviceController = new BlueToothController(this);
+    deviceController.init();
   }
 
   @Override
   protected void onDestroy() {
-    blueToothController.onDestroy();
+    deviceController.onDestroy();
     super.onDestroy();
   }
 
@@ -64,9 +74,13 @@ public class TrainControlActivity extends Activity implements ActivityCallback {
   }
 
   @Override
-  public void onTrainControlDevicesUpdated(List<TrainControlDevice> controlDevices) {
+  public void onTrainControlDevicesUpdated(List<TrainControlBluetoothDevice> controlDevices) {
     TrainControlActivity.this.controlDevices.clear();
     TrainControlActivity.this.controlDevices.addAll(controlDevices);
+  }
+
+  public List<TrainControlDevice> getControlDevices() {
+    return controlDevices;
   }
 
   @Override
@@ -85,12 +99,9 @@ public class TrainControlActivity extends Activity implements ActivityCallback {
 
   @Override
   public void onConnectionStateChanged(final boolean connected) {
-    runOnUiThread(new Runnable() {
-      @Override
-      public void run() {
-        ImageView iv = (ImageView) findViewById(R.id.trainConnected);
-        iv.setImageResource(connected ? R.drawable.led_green : R.drawable.led_red);
-      }
+    runOnUiThread(() -> {
+      ImageView iv = findViewById(R.id.trainConnected);
+      iv.setImageResource(connected ? R.drawable.led_green : R.drawable.led_red);
     });
   }
 
@@ -101,14 +112,15 @@ public class TrainControlActivity extends Activity implements ActivityCallback {
     //noinspection SimplifiableIfStatement
     if (id == R.id.action_rescan) {
       Log.d(TAG, "Rescan");
+      deviceController.send("N");
       return true;
     }
 
     for (TrainControlDevice device : controlDevices) {
       if (device.id == id) {
         try {
-          blueToothController.activateControl(device);
           Log.d(TAG, "Device " + device + " active.");
+          deviceController.activateControl(device);
           showDeviceImage(device);
           return true;
         } catch (IOException ex) {
@@ -122,50 +134,55 @@ public class TrainControlActivity extends Activity implements ActivityCallback {
   }
 
   private void showDeviceImage(TrainControlDevice device) {
-    ImageView lokView = (ImageView) findViewById(R.id.trainImageView);
-    if (StringUtils.containsIgnoreCase(device.toString(), "gelb")) {
-      lokView.setImageResource(R.drawable.gelbe_lok);
-      return;
-    }
-    if (StringUtils.containsIgnoreCase(device.toString(), "horizon")) {
-      lokView.setImageResource(R.drawable.horizon_express);
-      return;
-    }
-    if (StringUtils.containsIgnoreCase(device.toString(), "blau")) {
-      lokView.setImageResource(R.drawable.blaue_lok);
-      return;
+    ImageView lokView = findViewById(R.id.trainImageView);
+    switch (device.id) {
+      case 7939:
+        lokView.setImageResource(R.drawable.img7939);
+        return;
+      case 60197:
+        lokView.setImageResource(R.drawable.img60197);
+        return;
+      case 10233:
+        lokView.setImageResource(R.drawable.img10233);
+        return;
+      case 60052:
+        lokView.setImageResource(R.drawable.img60052);
+        return;
+      case 60198:
+        lokView.setImageResource(R.drawable.img60198);
+        return;
     }
     lokView.setImageResource(R.drawable.keine_lok);
   }
 
   private void initTrainDirection() {
-    RadioGroup radioDirection = (RadioGroup) findViewById(R.id.radioDirection);
-    radioDirection.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-      @Override
-      public void onCheckedChanged(RadioGroup group, int checkedId) {
-        switch (checkedId) {
-          case R.id.radioForward:
-            blueToothController.send("S000");
-            blueToothController.send("D0");
-            break;
-          case R.id.radioReverse:
-            blueToothController.send("S000");
-            blueToothController.send("D1");
-            break;
-        }
+    RadioGroup radioDirection = findViewById(R.id.radioDirection);
+    radioDirection.setOnCheckedChangeListener((group, checkedId) -> {
+      SeekBar trainSpeed = findViewById(R.id.trainSpeed);
+      trainSpeed.setProgress(0);
+
+      switch (checkedId) {
+        case R.id.radioForward:
+          deviceController.send("S000");
+          deviceController.send("D0");
+          break;
+        case R.id.radioReverse:
+          deviceController.send("S000");
+          deviceController.send("D1");
+          break;
       }
     });
   }
 
   private void initTrainSpeed() {
-    SeekBar trainSpeed = (SeekBar) findViewById(R.id.trainSpeed);
+    SeekBar trainSpeed = findViewById(R.id.trainSpeed);
     trainSpeed.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
       String speed;
 
       @Override
       public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
         speed = SpeedValues.getSpeedForProgress(progress);
-        blueToothController.send(speed);
+        deviceController.send(speed);
       }
 
       @Override
@@ -175,9 +192,24 @@ public class TrainControlActivity extends Activity implements ActivityCallback {
       @Override
       public void onStopTrackingTouch(SeekBar seekBar) {
         Toast.makeText(getApplicationContext(), "progress " + speed, Toast.LENGTH_SHORT).show();
-        blueToothController.send(speed);
+//        deviceController.send(speed);
       }
     });
+  }
+
+  private void initLights() {
+    RadioGroup radioLights = findViewById(R.id.radioLights);
+    radioLights.setOnCheckedChangeListener((group, checkedId) -> {
+      switch (checkedId) {
+        case R.id.radioLightOn:
+          deviceController.send("L1");
+          break;
+        case R.id.radioLightOff:
+          deviceController.send("L0");
+          break;
+      }
+    });
+
   }
 }
 
